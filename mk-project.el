@@ -183,6 +183,9 @@ paths when greping or indexing the project.")
       (cdr (assoc mk-proj-vcs mk-proj-vcs-path))
     nil))
 
+(defun mk-proj-has-univ-arg ()
+  (eql (prefix-numeric-value current-prefix-arg) 4))
+
 ;; ---------------------------------------------------------------------
 ;; Project Configuration
 ;; ---------------------------------------------------------------------
@@ -416,15 +419,16 @@ paths when greping or indexing the project.")
 ;; ---------------------------------------------------------------------
 
 (defun project-grep ()
-  "Run find-grep on the project's basedir, excluding files in mk-proj-ignore-patterns, tag files, etc"
+  "Run find-grep on the project's basedir, excluding files in mk-proj-ignore-patterns, tag files, etc.
+With C-u prefix, start from the current directory"
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
          (regex (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
                   (read-string "Grep project for: ")))
-         (find-cmd (concat "find . -type f"))
+         (find-cmd (format "find . -type f"))
          (grep-cmd (concat "grep -i -n \"" regex "\""))
-         (default-directory mk-proj-basedir))
+         (default-directory (if (mk-proj-has-univ-arg) default-directory mk-proj-basedir)))
     (when mk-proj-ignore-patterns
       (setq find-cmd (concat find-cmd (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns))))
     (when mk-proj-tags-file
@@ -460,9 +464,7 @@ With C-u prefix, start ack from the current directory"
                   (read-string "Ack project for: ")))
          (whole-cmd (mk-proj-ack-cmd regex))
          (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd))
-         (default-directory (if (eql (prefix-numeric-value current-prefix-arg) 4)
-                                default-directory
-                              mk-proj-basedir)))
+         (default-directory (if (mk-proj-has-univ-arg) default-directory mk-proj-basedir)))
     (compilation-start whole-cmd 'ack-mode)))
 
 ;; ---------------------------------------------------------------------
