@@ -28,7 +28,7 @@
 ;;
 ;; project-load        - set project variables, open files named in the
 ;;                       open-files-cache, run startup hook
-;; project-unload      - save open files names to the open-files-cache, 
+;; project-unload      - save open files names to the open-files-cache,
 ;;                       run shutdown hook, unset project variables
 ;; project-status      - print values of project variables
 ;; project-close-files - close all files in this project
@@ -497,18 +497,19 @@ paths when greping or indexing the project.")
   "Regenerate the *file-index* buffer that is used for project-find-file"
   (interactive)
   (mk-proj-assert-proj)
-  (message "Refreshing %s buffer..." mk-proj-fib-name)
-  (mk-proj-fib-clear)
-  (let ((find-cmd (concat "find " mk-proj-basedir " -type f "
-                          (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
-        (proc-name "index-process"))
-    (when (mk-proj-get-vcs-path)
-      (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
-    (with-current-buffer (get-buffer-create mk-proj-fib-name)
-      (buffer-disable-undo) ;; this is a large change we don't need to undo
-      (setq buffer-read-only nil))
-    (start-process-shell-command proc-name mk-proj-fib-name find-cmd)
-    (set-process-sentinel (get-process proc-name) 'mk-proj-fib-cb)))
+  (when mk-proj-file-list-cache
+    (message "Refreshing %s buffer..." mk-proj-fib-name)
+    (mk-proj-fib-clear)
+    (let ((find-cmd (concat "find " mk-proj-basedir " -type f "
+                            (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
+          (proc-name "index-process"))
+      (when (mk-proj-get-vcs-path)
+        (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
+      (with-current-buffer (get-buffer-create mk-proj-fib-name)
+        (buffer-disable-undo) ;; this is a large change we don't need to undo
+        (setq buffer-read-only nil))
+      (start-process-shell-command proc-name mk-proj-fib-name find-cmd)
+      (set-process-sentinel (get-process proc-name) 'mk-proj-fib-cb))))
 
 (defun* project-find-file (regex)
   "Find file in the current project matching the given regex.
