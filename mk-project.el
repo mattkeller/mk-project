@@ -33,8 +33,8 @@
 ;; project-status      - print values of project variables
 ;; project-close-files - close all files in this project
 ;; project-compile     - run the compile command
-;; project-grep        - run find-grep on the project's basedir
-;; project-ack         - run ack on the project's basedir
+;; project-grep        - run find-grep from the project's basedir
+;; project-ack         - run ack from the project's basedir
 ;; project-find-file   - quickly open a file in basedir by regex
 ;; project-index       - re-index the project files
 ;; project-home        - cd to the project's basedir
@@ -54,7 +54,7 @@
 ;;         (open-files-cache "/home/me/.my-proj-open-files")
 ;;         (vcs              git)
 ;;         (compile-cmd      "ant")
-;;         (ack-args         "--java -H")
+;;         (ack-args         "--java -i")
 ;;         (startup-hook     myproj-startup-hook)
 ;;         (shutdown-hook    nil)))
 ;;
@@ -111,8 +111,8 @@ expand-file-name. Example: ~me/my-proj/.")
 project-grep. Optional. Example: '(\"*.class\").")
 
 (defvar mk-proj-ack-args nil
-  "String of arguments to pass to the `ack' command. Optional. 
-Example: '--java -H'")
+  "String of arguments to pass to the `ack' command. Optional.
+Example: '--java -i'")
 
 ; TODO: generalize this to ignore-paths variable
 (defvar mk-proj-vcs nil
@@ -226,7 +226,7 @@ paths when greping or indexing the project.")
     (setq mk-proj-name proj-name)
     (setq mk-proj-basedir (expand-file-name (config-val 'basedir)))
     ;; optional vars
-    (dolist (v '(src-patterns ignore-patterns ack-args vcs tags-file 
+    (dolist (v '(src-patterns ignore-patterns ack-args vcs tags-file
                  compile-cmd startup-hook shutdown-hook))
       (maybe-set-var v))
     (maybe-set-var 'tags-file #'expand-file-name)
@@ -423,7 +423,7 @@ paths when greping or indexing the project.")
   (let* ((wap (word-at-point))
          (regex (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
                  (read-string "Grep project for: "))))
-    (cd mk-proj-basedir)
+    (cd mk-proj-basedir) ;; TODO: save/restore the current dir
     (let ((find-cmd (concat "find . -type f"))
           (grep-cmd (concat "grep -i -n \"" regex "\"")))
       (when mk-proj-ignore-patterns
@@ -440,17 +440,30 @@ paths when greping or indexing the project.")
 ;; Ack (betterthangrep.com)
 ;; ---------------------------------------------------------------------
 
-(define-compilation-mode ack-mode "Ack"
-  "Ack compilation mode."
-  nil)
+(define-compilation-mode ack-mode "Ack" "Ack compilation mode." nil)
 
-(defun project-ack (regex)
+(defvar mk-proj-ack-default-args "--nocolor --nogroup")
+
+(defun mk-proj-ack-cmd (regex)
+  (concat "ack "
+          mk-proj-ack-default-args " "
+          (if case-fold-search "-i " "")
+          mk-proj-ack-args " "
+          regex))
+
+(defun project-ack ()
   "Run ack from project's basedir, using the `ack-args' configuration"
-  (interactive "sSearch for: ")
+  ;; TODO: with universal arg, start at dir of current buffer
+  ;; TODO: save & restore current directory
+  (interactive)
   (mk-proj-assert-proj)
-  (project-home) ;; TODO: save old pwd
-  (compilation-start (concat "ack --nocolor --nogroup " mk-proj-ack-args " " regex) 'ack-mode))
-
+  (let* ((wap (word-at-point))
+         (regex (if wap (read-string (concat "Ack project for (default \"" wap "\"): ") nil nil wap)
+                  (read-string "Ack project for: ")))
+         (whole-cmd (mk-proj-ack-cmd regex))
+         (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd)))
+    (project-home)
+    (compilation-start whole-cmd 'ack-mode)))
 
 ;; ---------------------------------------------------------------------
 ;; Compile
