@@ -426,7 +426,7 @@ With C-u prefix, start from the current directory"
   (let* ((wap (word-at-point))
          (regex (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
                   (read-string "Grep project for: ")))
-         (find-cmd (format "find . -type f"))
+         (find-cmd "find . -type f")
          (grep-cmd (concat "grep -i -n \"" regex "\""))
          (default-directory (if (mk-proj-has-univ-arg) default-directory mk-proj-basedir)))
     (when mk-proj-ignore-patterns
