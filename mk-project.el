@@ -112,7 +112,7 @@ project-grep. Optional. Example: '(\"*.class\").")
 
 (defvar mk-proj-ack-args nil
   "String of arguments to pass to the `ack' command. Optional.
-Example: '--java -i'")
+Example: \"--java -i\".")
 
 ; TODO: generalize this to ignore-paths variable
 (defvar mk-proj-vcs nil
@@ -420,7 +420,7 @@ paths when greping or indexing the project.")
 
 (defun project-grep ()
   "Run find-grep on the project's basedir, excluding files in mk-proj-ignore-patterns, tag files, etc.
-With C-u prefix, start from the current directory"
+With C-u prefix, start from the current directory."
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
@@ -448,6 +448,7 @@ With C-u prefix, start from the current directory"
 (defvar mk-proj-ack-default-args "--nocolor --nogroup")
 
 (defun mk-proj-ack-cmd (regex)
+  "Generate the ack command string given a regex to search for."
   (concat "ack "
           mk-proj-ack-default-args " "
           (if case-fold-search "-i " "")
@@ -456,7 +457,7 @@ With C-u prefix, start from the current directory"
 
 (defun project-ack ()
   "Run ack from project's basedir, using the `ack-args' configuration.
-With C-u prefix, start ack from the current directory"
+With C-u prefix, start ack from the current directory."
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
