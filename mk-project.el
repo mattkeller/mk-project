@@ -386,15 +386,14 @@ paths when greping or indexing the project.")
   (interactive)
   (mk-proj-assert-proj)
   (if mk-proj-tags-file
-    (progn
-      (cd mk-proj-basedir)
-      (message "Refreshing TAGS file %s..." mk-proj-tags-file)
-      (let ((etags-cmd (concat "find " mk-proj-basedir " -type f "
-                               (mk-proj-find-cmd-src-args mk-proj-src-patterns)
-                               " | etags -o " mk-proj-tags-file " - "))
-            (proc-name "etags-process"))
+    (let ((default-directory mk-proj-basedir)
+          (etags-cmd (concat "find " mk-proj-basedir " -type f "
+                             (mk-proj-find-cmd-src-args mk-proj-src-patterns)
+                             " | etags -o " mk-proj-tags-file " - "))
+          (proc-name "etags-process"))
+        (message "Refreshing TAGS file %s..." mk-proj-tags-file)
         (start-process-shell-command proc-name "*etags*" etags-cmd)
-        (set-process-sentinel (get-process proc-name) 'mk-proj-etags-cb)))
+        (set-process-sentinel (get-process proc-name) 'mk-proj-etags-cb))
     (message "mk-proj-tags-file is not set")))
 
 (defun mk-proj-find-cmd-src-args (src-patterns)
@@ -422,19 +421,19 @@ paths when greping or indexing the project.")
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
          (regex (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
-                 (read-string "Grep project for: "))))
-    (cd mk-proj-basedir) ;; TODO: save/restore the current dir
-    (let ((find-cmd (concat "find . -type f"))
-          (grep-cmd (concat "grep -i -n \"" regex "\"")))
-      (when mk-proj-ignore-patterns
-        (setq find-cmd (concat find-cmd (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns))))
-      (when mk-proj-tags-file
-        (setq find-cmd (concat find-cmd " -not -name 'TAGS'")))
-      (when (mk-proj-get-vcs-path)
-        (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
-      (let* ((whole-cmd (concat find-cmd " -print0 | xargs -0 -e " grep-cmd))
-             (confirmed-cmd (read-string "Grep command: " whole-cmd nil whole-cmd)))
-        (grep-find confirmed-cmd)))))
+                  (read-string "Grep project for: ")))
+         (find-cmd (concat "find . -type f"))
+         (grep-cmd (concat "grep -i -n \"" regex "\""))
+         (default-directory mk-proj-basedir))
+    (when mk-proj-ignore-patterns
+      (setq find-cmd (concat find-cmd (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns))))
+    (when mk-proj-tags-file
+      (setq find-cmd (concat find-cmd " -not -name 'TAGS'")))
+    (when (mk-proj-get-vcs-path)
+      (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
+    (let* ((whole-cmd (concat find-cmd " -print0 | xargs -0 -e " grep-cmd))
+           (confirmed-cmd (read-string "Grep command: " whole-cmd nil whole-cmd)))
+      (grep-find confirmed-cmd))))
 
 ;; ---------------------------------------------------------------------
 ;; Ack (betterthangrep.com)
@@ -454,15 +453,14 @@ paths when greping or indexing the project.")
 (defun project-ack ()
   "Run ack from project's basedir, using the `ack-args' configuration"
   ;; TODO: with universal arg, start at dir of current buffer
-  ;; TODO: save & restore current directory
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
          (regex (if wap (read-string (concat "Ack project for (default \"" wap "\"): ") nil nil wap)
                   (read-string "Ack project for: ")))
          (whole-cmd (mk-proj-ack-cmd regex))
-         (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd)))
-    (project-home)
+         (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd))
+         (default-directory mk-proj-basedir))
     (compilation-start whole-cmd 'ack-mode)))
 
 ;; ---------------------------------------------------------------------
