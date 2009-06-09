@@ -451,8 +451,8 @@ paths when greping or indexing the project.")
           regex))
 
 (defun project-ack ()
-  "Run ack from project's basedir, using the `ack-args' configuration"
-  ;; TODO: with universal arg, start at dir of current buffer
+  "Run ack from project's basedir, using the `ack-args' configuration.
+With C-u prefix, start ack from the current directory"
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
@@ -460,7 +460,9 @@ paths when greping or indexing the project.")
                   (read-string "Ack project for: ")))
          (whole-cmd (mk-proj-ack-cmd regex))
          (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd))
-         (default-directory mk-proj-basedir))
+         (default-directory (if (eql (prefix-numeric-value current-prefix-arg) 4)
+                                default-directory
+                              mk-proj-basedir)))
     (compilation-start whole-cmd 'ack-mode)))
 
 ;; ---------------------------------------------------------------------
