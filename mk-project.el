@@ -33,7 +33,8 @@
 ;; project-status      - print values of project variables
 ;; project-close-files - close all files in this project
 ;; project-compile     - run the compile command
-;; project-grep        - fun find-grep on the project's basedir
+;; project-grep        - run find-grep on the project's basedir
+;; project-ack         - run ack on the project's basedir
 ;; project-find-file   - quickly open a file in basedir by regex
 ;; project-index       - re-index the project files
 ;; project-home        - cd to the project's basedir
@@ -53,6 +54,7 @@
 ;;         (open-files-cache "/home/me/.my-proj-open-files")
 ;;         (vcs              git)
 ;;         (compile-cmd      "ant")
+;;         (ack-args         "--java -H")
 ;;         (startup-hook     myproj-startup-hook)
 ;;         (shutdown-hook    nil)))
 ;;
@@ -61,6 +63,7 @@
 ;;
 ;; (global-set-key (kbd "C-c p c") 'project-compile)
 ;; (global-set-key (kbd "C-c p g") 'project-grep)
+;; (global-set-key (kbd "C-c p a") 'project-ack)
 ;; (global-set-key (kbd "C-c p l") 'project-load)
 ;; (global-set-key (kbd "C-c p u") 'project-unload)
 ;; (global-set-key (kbd "C-c p f") 'project-find-file)
@@ -106,6 +109,10 @@ expand-file-name. Example: ~me/my-proj/.")
 (defvar mk-proj-ignore-patterns nil
   "List of shell patterns to avoid searching for with project-find-file and
 project-grep. Optional. Example: '(\"*.class\").")
+
+(defvar mk-proj-ack-args nil
+  "String of arguments to pass to the `ack' command. Optional. 
+Example: '--java -H'")
 
 ; TODO: generalize this to ignore-paths variable
 (defvar mk-proj-vcs nil
@@ -195,6 +202,7 @@ paths when greping or indexing the project.")
         mk-proj-basedir          nil
         mk-proj-src-patterns     nil
         mk-proj-ignore-patterns  nil
+        mk-proj-ack-args         nil
         mk-proj-vcs              nil
         mk-proj-tags-file        nil
         mk-proj-compile-cmd      nil
@@ -218,8 +226,8 @@ paths when greping or indexing the project.")
     (setq mk-proj-name proj-name)
     (setq mk-proj-basedir (expand-file-name (config-val 'basedir)))
     ;; optional vars
-    (dolist (v '(src-patterns ignore-patterns vcs tags-file compile-cmd
-                 startup-hook shutdown-hook))
+    (dolist (v '(src-patterns ignore-patterns ack-args vcs tags-file 
+                 compile-cmd startup-hook shutdown-hook))
       (maybe-set-var v))
     (maybe-set-var 'tags-file #'expand-file-name)
     (maybe-set-var 'file-list-cache #'expand-file-name)
@@ -427,6 +435,22 @@ paths when greping or indexing the project.")
       (let* ((whole-cmd (concat find-cmd " -print0 | xargs -0 -e " grep-cmd))
              (confirmed-cmd (read-string "Grep command: " whole-cmd nil whole-cmd)))
         (grep-find confirmed-cmd)))))
+
+;; ---------------------------------------------------------------------
+;; Ack (betterthangrep.com)
+;; ---------------------------------------------------------------------
+
+(define-compilation-mode ack-mode "Ack"
+  "Ack compilation mode."
+  nil)
+
+(defun project-ack (regex)
+  "Run ack from project's basedir, using the `ack-args' configuration"
+  (interactive "sSearch for: ")
+  (mk-proj-assert-proj)
+  (project-home) ;; TODO: save old pwd
+  (compilation-start (concat "ack --nocolor --nogroup " mk-proj-ack-args " " regex) 'ack-mode))
+
 
 ;; ---------------------------------------------------------------------
 ;; Compile
