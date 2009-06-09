@@ -391,14 +391,18 @@ paths when greping or indexing the project.")
 
 (defun mk-proj-find-cmd-src-args (src-patterns)
   "Generate the ( -name <pat1> -o -name <pat2> ...) pattern for find cmd"
-  (let ((name-expr " \\("))
-    (dolist (pat src-patterns)
-      (setq name-expr (concat name-expr " -name \"" pat "\" -o ")))
-    (concat (mk-proj-replace-tail name-expr "-o " "") "\\) ")))
+  (if src-patterns
+      (let ((name-expr " \\("))
+        (dolist (pat src-patterns)
+          (setq name-expr (concat name-expr " -name \"" pat "\" -o ")))
+        (concat (mk-proj-replace-tail name-expr "-o " "") "\\) "))
+    ""))
 
 (defun mk-proj-find-cmd-ignore-args (ignore-patterns)
   "Generate the -not ( -name <pat1> -o -name <pat2> ...) pattern for find cmd"
-  (concat " -not " (mk-proj-find-cmd-src-args ignore-patterns)))
+  (if ignore-patterns
+      (concat " -not " (mk-proj-find-cmd-src-args ignore-patterns))
+    ""))
 
 ;; ---------------------------------------------------------------------
 ;; Grep
