@@ -316,6 +316,34 @@ paths when greping or indexing the project.")
     (message "Closed %d buffers, %d modified buffers where left open"
              (length closed) (length dirty))))
 
+(defun mk-proj-buffer-p (buf)
+  "Is the given buffer in our project based on filename? Also detects dired buffers open to basedir/*"
+  (let ((file-name (buffer-file-name buf)))
+    (if (and file-name
+             (string-match (concat "^" (regexp-quote mk-proj-basedir)) file-name))
+        t
+      nil)))
+
+(defun mk-proj-buffers ()
+  "Get a list of buffers that reside in this project's basedir"
+  (let ((buffers nil))
+    (dolist (b (buffer-list))
+      (when (mk-proj-buffer-p b) (push b buffers)))
+    buffers))
+
+(defun project-status ()
+  "View project's variables."
+  (interactive)
+  (mk-proj-assert-proj)
+  (message "Name=%s; Basedir=%s; Src=%s; Ignore=%s; VCS=%s; Tags=%s; Compile=%s; File-Cache=%s; Open-Files-Cache=%s; Startup=%s; Shutdown=%s"
+           mk-proj-name mk-proj-basedir mk-proj-src-patterns mk-proj-ignore-patterns mk-proj-vcs
+           mk-proj-tags-file mk-proj-compile-cmd mk-proj-file-list-cache mk-proj-open-files-cache
+           mk-proj-startup-hook mk-proj-shutdown-hook))
+
+;; ---------------------------------------------------------------------
+;; Save/Restore open files
+;; ---------------------------------------------------------------------
+
 (defun mk-proj-save-open-file-info ()
   "Write the list of `files' to a file"
   (when mk-proj-open-files-cache
@@ -345,30 +373,6 @@ paths when greping or indexing the project.")
               (message "Attempting to open %s" line)
               (find-file-noselect line t)))
           (forward-line))))))
-
-(defun mk-proj-buffer-p (buf)
-  "Is the given buffer in our project based on filename? Also detects dired buffers open to basedir/*"
-  (let ((file-name (buffer-file-name buf)))
-    (if (and file-name
-             (string-match (concat "^" (regexp-quote mk-proj-basedir)) file-name))
-        t
-      nil)))
-
-(defun mk-proj-buffers ()
-  "Get a list of buffers that reside in this project's basedir"
-  (let ((buffers nil))
-    (dolist (b (buffer-list))
-      (when (mk-proj-buffer-p b) (push b buffers)))
-    buffers))
-
-(defun project-status ()
-  "View project's variables."
-  (interactive)
-  (mk-proj-assert-proj)
-  (message "Name=%s; Basedir=%s; Src=%s; Ignore=%s; VCS=%s; Tags=%s; Compile=%s; File-Cache=%s; Open-Files-Cache=%s; Startup=%s; Shutdown=%s"
-           mk-proj-name mk-proj-basedir mk-proj-src-patterns mk-proj-ignore-patterns mk-proj-vcs
-           mk-proj-tags-file mk-proj-compile-cmd mk-proj-file-list-cache mk-proj-open-files-cache
-           mk-proj-startup-hook mk-proj-shutdown-hook))
 
 ;; ---------------------------------------------------------------------
 ;; Etags
