@@ -120,6 +120,7 @@ Example: \"--java\".")
   "When set to one of the VCS types in mk-proj-vcs-path, grep and index
 commands will ignore the VCS's private files (e.g., .CVS/). Example: 'git.")
 
+; TODO: support multiple tags file via tags-table-list
 (defvar mk-proj-tags-file nil
   "Path to the TAGS file for this project. Optional. Use an absolute path,
 not one relative to basedir. Value is expanded with expand-file-name.")
