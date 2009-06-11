@@ -54,7 +54,7 @@
 ;;         (open-files-cache "/home/me/.my-proj-open-files")
 ;;         (vcs              git)
 ;;         (compile-cmd      "ant")
-;;         (ack-args         "--java -i")
+;;         (ack-args         "--java")
 ;;         (startup-hook     myproj-startup-hook)
 ;;         (shutdown-hook    nil)))
 ;;
@@ -85,7 +85,8 @@
 (require 'thingatpt)
 (require 'cl)
 
-(defvar mk-proj-version "1.0.3" "Corresponds to tags in my git repository")
+(defvar mk-proj-version "1.1"
+  "As tagged at http://github.com/mattkeller/mk-project/tree/master")
 
 ;; ---------------------------------------------------------------------
 ;; Project Variables
@@ -112,7 +113,7 @@ project-grep. Optional. Example: '(\"*.class\").")
 
 (defvar mk-proj-ack-args nil
   "String of arguments to pass to the `ack' command. Optional.
-Example: \"--java -i\".")
+Example: \"--java\".")
 
 ; TODO: generalize this to ignore-paths variable
 (defvar mk-proj-vcs nil
@@ -160,6 +161,19 @@ The list is used by 'project-find-file' to quickly locate project files.")
                              (hg  . "'*/.hg/*'"))
   "When mk-proj-vcs is one of the VCS types listed here, ignore the associated
 paths when greping or indexing the project.")
+
+;; ---------------------------------------------------------------------
+;; Customization
+;; ---------------------------------------------------------------------
+
+(defgroup mk-project nil
+  "A programming project management library."
+  :group 'tools)
+
+(defcustom mk-proj-ack-respect-case-fold t
+  "If on and case-fold-search is true, project-ack will ignore case by passing \"-i\" to ack."
+  :type 'boolean
+  :group 'mk-project)
 
 ;; ---------------------------------------------------------------------
 ;; Utils
@@ -451,7 +465,7 @@ With C-u prefix, start from the current directory."
   "Generate the ack command string given a regex to search for."
   (concat "ack "
           mk-proj-ack-default-args " "
-          (if case-fold-search "-i " "")
+          (if (and mk-proj-ack-respect-case-fold case-fold-search) "-i " "")
           mk-proj-ack-args " "
           regex))
 
