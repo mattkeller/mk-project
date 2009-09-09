@@ -22,9 +22,12 @@
 ;; Quickly switch between projects and perform operations on a
 ;; per-project basis. A 'project' in this sense is a directory of
 ;; related files, usually a directory of source files. Projects are
-;; defined in pure elisp with the 'project-def' function. See the
-;; documentation of the following project operation functions for
-;; more details.
+;; defined in pure elisp with the 'project-def' function. No
+;; mk-project-specific files are required in the project's base
+;; directory.
+;;
+;; The following functions constitute the public API of this file. See
+;; the doc-strings of each function for more details.
 ;;
 ;; project-load           - set project variables, open files named in the
 ;;                          open-files-cache, run startup hook
@@ -42,24 +45,24 @@
 ;; project-tags           - regenerate the project's TAGS file
 ;; project-dired          - open 'dired' on the project's basedir
 
-;; Example use:
+;; Example configuration:
 ;;
 ;; (require 'mk-project)
 ;;
-;; (project-def "my-proj"
-;;       '((basedir          "/home/me/my-proj/")
+;; (project-def "my-java-project"g
+;;       '((basedir          "/home/me/my-java-project/")
 ;;         (src-patterns     ("*.java" "*.jsp"))
 ;;         (ignore-patterns  ("*.class" "*.wsdl"))
-;;         (tags-file        "/home/me/my-proj/TAGS")
-;;         (file-list-cache  "/home/me/.my-proj-files")
-;;         (open-files-cache "/home/me/.my-proj-open-files")
+;;         (tags-file        "/home/me/.my-java-project/TAGS")
+;;         (file-list-cache  "/home/me/.my-java-project/files")
+;;         (open-files-cache "/home/me/.my-java-project/open-files")
 ;;         (vcs              git)
 ;;         (compile-cmd      "ant")
 ;;         (ack-args         "--java")
-;;         (startup-hook     myproj-startup-hook)
+;;         (startup-hook     my-java-project-startup)
 ;;         (shutdown-hook    nil)))
 ;;
-;; (defun myproj-startup-hook ()
+;; (defun my-java-project-startup ()
 ;;   (setq c-basic-offset 3))
 ;;
 ;; (global-set-key (kbd "C-c p c") 'project-compile)
@@ -86,7 +89,7 @@
 (require 'thingatpt)
 (require 'cl)
 
-(defvar mk-proj-version "1.1"
+(defvar mk-proj-version "1.2"
   "As tagged at http://github.com/mattkeller/mk-project/tree/master")
 
 ;; ---------------------------------------------------------------------
