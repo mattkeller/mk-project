@@ -518,7 +518,7 @@ With C-u prefix, start ack from the current directory."
          (whole-cmd (mk-proj-ack-cmd regex))
          (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd))
          (default-directory (if (mk-proj-has-univ-arg) default-directory mk-proj-basedir)))
-    (compilation-start whole-cmd 'ack-mode)))
+    (compilation-start confirmed-cmd 'ack-mode)))
 
 ;; ---------------------------------------------------------------------
 ;; Compile
