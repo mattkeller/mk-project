@@ -154,10 +154,48 @@ project-load will open all files listed in this file and project-unload will
 write all open project files to this file. Value is expanded with
 expand-file-name.")
 
+(defvar mk-proj-src-find-cmd-fn nil
+  "If set, call this fn to calculate a custom \"find\" command to
+identify files to be inclucluded in the TAGS file. If set, the
+values of `mk-proj-src-patterns` will not be used. Example:
+  (lambda () 
+    (concat \"find \" mk-proj-basedir 
+            \" \\(-path thirdparty -prune\\) -o \"
+            \"\\(-type f -name '*.java' -print\\)\")")
+
+(defvar mk-proj-grep-find-cmd-fn nil
+  "If set, call this fn to calculate a custom \"find\" command to
+identify files to grep via `project-grep'. The find command's
+'-print0' option MUST be used as we pipe this command to 'xargs
+-0 ...'. If this variable is set, the values of
+`mk-proj-ignore-patterns' and `mk-proj-vcs' will not be used.
+
+Example:
+  (lambda () 
+    (concat \"find \" mk-proj-basedir 
+            \" \\(-path thirdparty -o -path '.git' -prune\\) -o \"
+            \"\\(-not -name '*.wsdl'\\) -o print0\"))")
+
+(defvar mk-proj-index-find-cmd-fn nil
+  "If set, call this fn to calculate a custom \"find\" command to
+identify files to be included in the project index (to be used by
+`project-find-file') The find command's '-print0' option MUST NOT
+be used -- unlike `mk-proj-grep-find-cmd-fn'. If this variable is
+set, the values of `mk-proj-ignore-patterns' and `mk-proj-vcs'
+will not be used.
+
+Example:
+  (lambda () 
+    (concat \"find \" mk-proj-basedir 
+            \" \\(-path thirdparty -o -path '.git' -prune\\) -o \"
+            \"\\(-not -name '*.wsdl'\\) -o print\"))")
+
 (defconst mk-proj-fib-name "*file-index*"
-  "Buffer name of the file-list cache. This buffer contains a list of all
-the files under the project's basedir - minus those matching ignore-patterns.
-The list is used by 'project-find-file' to quickly locate project files.")
+  "Buffer name of the file-list cache. This buffer contains a
+list of all the files under the project's basedir - minus those
+matching ignore-patterns or, if index-find-cmd-fn is set, the list
+of files found by calling the custom function.  The list is used
+by 'project-find-file' to quickly locate project files.")
 
 (defconst mk-proj-vcs-path '((git . "'*/.git/*'")
                              (cvs . "'*/.CVS/*'")
@@ -238,18 +276,21 @@ paths when greping or indexing the project.")
 
 (defun mk-proj-defaults ()
   "Set all default values for project variables"
-  (setq mk-proj-name             nil
-        mk-proj-basedir          nil
-        mk-proj-src-patterns     nil
-        mk-proj-ignore-patterns  nil
-        mk-proj-ack-args         nil
-        mk-proj-vcs              nil
-        mk-proj-tags-file        nil
-        mk-proj-compile-cmd      nil
-        mk-proj-startup-hook     nil
-        mk-proj-shutdown-hook    nil
-        mk-proj-file-list-cache  nil
-        mk-proj-open-files-cache nil))
+  (setq mk-proj-name              nil
+        mk-proj-basedir           nil
+        mk-proj-src-patterns      nil
+        mk-proj-ignore-patterns   nil
+        mk-proj-ack-args          nil
+        mk-proj-vcs               nil
+        mk-proj-tags-file         nil
+        mk-proj-compile-cmd       nil
+        mk-proj-startup-hook      nil
+        mk-proj-shutdown-hook     nil
+        mk-proj-file-list-cache   nil
+        mk-proj-open-files-cache  nil
+        mk-proj-src-find-cmd-fn   nil
+        mk-proj-grep-find-cmd-fn  nil
+        mk-proj-index-find-cmd-fn nil))
 
 (defun mk-proj-load-vars (proj-name proj-alist)
   "Set project variables from proj-alist"
@@ -266,8 +307,10 @@ paths when greping or indexing the project.")
     (setq mk-proj-name proj-name)
     (setq mk-proj-basedir (expand-file-name (config-val 'basedir)))
     ;; optional vars
-    (dolist (v '(src-patterns ignore-patterns ack-args vcs tags-file
-                 compile-cmd startup-hook shutdown-hook))
+    (dolist (v '(src-patterns ignore-patterns ack-args vcs
+                 tags-file compile-cmd src-find-cmd-fn
+                 grep-find-cmd-fn index-find-cmd-fn startup-hook
+                 shutdown-hook))
       (maybe-set-var v))
     (maybe-set-var 'tags-file #'expand-file-name)
     (maybe-set-var 'file-list-cache #'expand-file-name)
@@ -309,7 +352,7 @@ paths when greping or indexing the project.")
     (mk-proj-save-open-file-info)))
 
 (defun project-unload ()
-  "Unload the current project's settings after runnin the shutdown hook."
+  "Unload the current project's settings after running the shutdown hook."
   (interactive)
   (when mk-proj-name
     (message "Unloading project %s" mk-proj-name)
@@ -442,8 +485,10 @@ paths when greping or indexing the project.")
   (mk-proj-assert-proj)
   (if mk-proj-tags-file
     (let ((default-directory mk-proj-basedir)
-          (etags-cmd (concat "find " mk-proj-basedir " -type f "
-                             (mk-proj-find-cmd-src-args mk-proj-src-patterns)
+          (etags-cmd (concat (if mk-proj-src-find-cmd-fn 
+                                 (funcall mk-proj-src-find-cmd-fn) 
+                               (concat "find " mk-proj-basedir " -type f "
+                                       (mk-proj-find-cmd-src-args mk-proj-src-patterns)))
                              " | etags -o " mk-proj-tags-file " - "))
           (proc-name "etags-process"))
         (message "Refreshing TAGS file %s..." mk-proj-tags-file)
@@ -487,7 +532,10 @@ With C-u prefix, start from the current directory."
       (setq find-cmd (concat find-cmd " -not -name 'TAGS'")))
     (when (mk-proj-get-vcs-path)
       (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
-    (let* ((whole-cmd (concat find-cmd " -print0 | xargs -0 -e " grep-cmd))
+    (let* ((whole-cmd (concat (if mk-proj-grep-find-cmd-fn 
+                                  (funcall mk-proj-grep-find-cmd-fn)
+                                (concat find-cmd " -print0"))
+                              " | xargs -0 -e " grep-cmd))
            (confirmed-cmd (read-string "Grep command: " whole-cmd nil whole-cmd)))
       (grep-find confirmed-cmd))))
 
@@ -592,8 +640,10 @@ With C-u prefix, start ack from the current directory."
   (when mk-proj-file-list-cache
     (message "Refreshing %s buffer..." mk-proj-fib-name)
     (mk-proj-fib-clear)
-    (let ((find-cmd (concat "find " mk-proj-basedir " -type f "
-                            (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
+    (let ((find-cmd (if mk-proj-index-find-cmd-fn
+                        (funcall mk-proj-index-find-cmd-fn)
+                      (concat "find " mk-proj-basedir " -type f "
+                              (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns))))
           (proc-name "index-process"))
       (when (mk-proj-get-vcs-path)
         (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
