@@ -26,6 +26,12 @@
 ;; mk-project-specific files are required in the project's base
 ;; directory.
 ;;
+;; This library requires the GNU 'find' program in your PATH. If you
+;; are using Windows, setting cygwin bash as your shell will do the
+;; trick (see http://www.emacswiki.org/emacs/NTEmacsWithCygwin).
+;; Additionally, the 'grep' and 'etags' command are required to make
+;; full use of this library's features.
+;;
 ;; The following functions constitute the public API of this file. See
 ;; the doc-strings of each function for more details.
 ;;
@@ -45,11 +51,11 @@
 ;; project-tags           - regenerate the project's TAGS file
 ;; project-dired          - open 'dired' on the project's basedir
 
-;; Example configuration:
+;; Example configuration for a simple Java project:
 ;;
 ;; (require 'mk-project)
 ;;
-;; (project-def "my-java-project"g
+;; (project-def "my-java-project"
 ;;       '((basedir          "/home/me/my-java-project/")
 ;;         (src-patterns     ("*.java" "*.jsp"))
 ;;         (ignore-patterns  ("*.class" "*.wsdl"))
