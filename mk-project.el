@@ -469,11 +469,18 @@ value is not used if a custom find command is set in
 (defun project-status ()
   "View project's variables."
   (interactive)
-  (mk-proj-assert-proj)
-  (message "Name=%s; Basedir=%s; Src=%s; Ignore=%s; VCS=%s; Tags=%s; Compile=%s; File-Cache=%s; Open-Files-Cache=%s; Startup=%s; Shutdown=%s"
-           mk-proj-name mk-proj-basedir mk-proj-src-patterns mk-proj-ignore-patterns mk-proj-vcs
-           mk-proj-tags-file mk-proj-compile-cmd mk-proj-file-list-cache mk-proj-open-files-cache
-           mk-proj-startup-hook mk-proj-shutdown-hook))
+  (if mk-proj-basedir
+      (let ((msg))
+        (dolist (v '(mk-proj-name mk-proj-basedir mk-proj-src-patterns 
+                     mk-proj-ignore-patterns mk-proj-vcs mk-proj-tags-file 
+                     mk-proj-compile-cmd mk-proj-file-list-cache 
+                     mk-proj-open-files-cache mk-proj-startup-hook 
+                     mk-proj-shutdown-hook mk-proj-src-find-cmd 
+                     mk-proj-grep-find-cmd mk-proj-index-find-cmd))
+          (setq msg (concat msg (format "%-24s = %s\n" v (symbol-value v)))))
+        (message msg))
+    (message "No project loaded.")))
+  
 
 ;; ---------------------------------------------------------------------
 ;; Save/Restore open files
