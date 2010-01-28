@@ -193,15 +193,12 @@ Examples:
   (grep-find-cmd  my-find-cmd)
 
   (defun my-find-cmd (context)
-    (let* ((ignore-dir (concat mk-proj-basedir \"/thirdparty\"))
-           (base-find (concat \"find '\" mk-proj-basedir \"' \\( -path '\" ignore-dir \"' -prune \\) \"))
-           (src-find \" \\( -type f \\( -name '*.cpp' -o -name '*.[cChH]' -o -name '*.java' \\) -print \\)\"))
+    (let* ((ignore-clause  (concat \"\\( -path \" mk-proj-basedir \"/thirdparty -prune \\)\"))
+           (src-clause     \"\\( -type f \\( -name '*.cpp' -o -name '*.[cChH]' -o -name '*.java' \\) -print \\)\"))
       (ecase context
-        ('src   (concat base-find \" -o \" src-find))
-        ('grep  (if some-interesting-condition
-                    nil ; use the mk-project default find command
-                  (replace-regexp-in-string \"print\" \"print0\" (soasm-find-cmd 'src))))
-        ('index (concat base-find \"-o -print\")))))
+        ('src   (concat \"find \" mk-proj-basedir \" \" ignore-clause \" -o \" src-clause))
+        ('grep  (replace-regexp-in-string \"-print\" \"-print0\" (concat \"find . \" src-clause) t))
+        ('index (concat \"find \" mk-proj-basedir \" \" ignore-clause \" -o -print\")))))
 
 If non-null (or if the function returns non-null), the custom
 find command will be used and the `mk-proj-src-patterns' and
@@ -214,11 +211,16 @@ running `project-grep'. Optional. The value is either a string or
 a function of one argument that returns a string. The argument to
 the function will be the symbol \"'grep\". The string or returned
 string MUST use find's \"-print0\" argument as the results of
-this command are piped to \"xargs -0 ..\".
+this command are piped to \"xargs -0 ...\".
 
 If non-null (or if the function returns non-null), the custom
 find command will be used and the `mk-proj-ignore-patterns' and
-`mk-proj-vcs' settings are not used when in the grep command.
+`mk-proj-vcs' settings will not be used in the grep command.
+
+The custom find command should use \".\" (current directory) as
+the path that find starts at -- this will allow the C-u argument
+to `project-grep' to run the command from the current buffer's
+directory.
 
 See the documenation of `mk-proj-src-find-cmd' for example
 values.")
