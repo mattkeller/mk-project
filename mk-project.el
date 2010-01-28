@@ -699,12 +699,12 @@ With C-u prefix, start ack from the current directory."
   (mk-proj-assert-proj)
   (when mk-proj-file-list-cache
     (mk-proj-fib-clear)
-    (let ((find-cmd (or (mk-proj-find-cmd-val 'index)
-                        (concat "find " mk-proj-basedir " -type f "
-                                (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns))))
+    (let ((find-cmd (concat "find " mk-proj-basedir " -type f "
+                            (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
           (proc-name "index-process"))
       (when (mk-proj-get-vcs-path)
         (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
+      (setq find-cmd (or (mk-proj-find-cmd-val 'index) find-cmd))
       (with-current-buffer (get-buffer-create mk-proj-fib-name)
         (buffer-disable-undo) ;; this is a large change we don't need to undo
         (setq buffer-read-only nil))
