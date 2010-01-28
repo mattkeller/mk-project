@@ -255,6 +255,23 @@ the associated paths when greping or indexing the project. This
 value is not used if a custom find command is set in
 `mk-proj-grep-find-cmd' or `mk-proj-index-find-cmd'")
 
+(defconst mk-proj-proj-vars '(mk-proj-name
+                              mk-proj-basedir
+                              mk-proj-src-patterns
+                              mk-proj-ignore-patterns
+                              mk-proj-ack-args
+                              mk-proj-vcs
+                              mk-proj-tags-file
+                              mk-proj-compile-cmd
+                              mk-proj-startup-hook
+                              mk-proj-shutdown-hook
+                              mk-proj-file-list-cache
+                              mk-proj-open-files-cache
+                              mk-proj-src-find-cmd
+                              mk-proj-grep-find-cmd
+                              mk-proj-index-find-cmd)
+  "List of all our project settings")
+
 ;; ---------------------------------------------------------------------
 ;; Customization
 ;; ---------------------------------------------------------------------
@@ -337,21 +354,8 @@ value is not used if a custom find command is set in
 
 (defun mk-proj-defaults ()
   "Set all default values for project variables"
-  (setq mk-proj-name              nil
-        mk-proj-basedir           nil
-        mk-proj-src-patterns      nil
-        mk-proj-ignore-patterns   nil
-        mk-proj-ack-args          nil
-        mk-proj-vcs               nil
-        mk-proj-tags-file         nil
-        mk-proj-compile-cmd       nil
-        mk-proj-startup-hook      nil
-        mk-proj-shutdown-hook     nil
-        mk-proj-file-list-cache   nil
-        mk-proj-open-files-cache  nil
-        mk-proj-src-find-cmd      nil
-        mk-proj-grep-find-cmd     nil
-        mk-proj-index-find-cmd    nil))
+  (dolist (var mk-proj-proj-vars)
+    (set var nil)))
 
 (defun mk-proj-load-vars (proj-name proj-alist)
   "Set project variables from proj-alist"
@@ -471,16 +475,10 @@ value is not used if a custom find command is set in
   (interactive)
   (if mk-proj-basedir
       (let ((msg))
-        (dolist (v '(mk-proj-name mk-proj-basedir mk-proj-src-patterns 
-                     mk-proj-ignore-patterns mk-proj-vcs mk-proj-tags-file 
-                     mk-proj-compile-cmd mk-proj-file-list-cache 
-                     mk-proj-open-files-cache mk-proj-startup-hook 
-                     mk-proj-shutdown-hook mk-proj-src-find-cmd 
-                     mk-proj-grep-find-cmd mk-proj-index-find-cmd))
+        (dolist (v mk-proj-proj-vars)
           (setq msg (concat msg (format "%-24s = %s\n" v (symbol-value v)))))
         (message msg))
     (message "No project loaded.")))
-  
 
 ;; ---------------------------------------------------------------------
 ;; Save/Restore open files
