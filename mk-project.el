@@ -447,11 +447,23 @@ paths when greping or indexing the project.")
   (interactive)
   (mk-proj-assert-proj)
   (if mk-proj-tags-file
-    (let ((default-directory mk-proj-basedir)
-          (etags-cmd (concat "find " mk-proj-basedir " -type f "
-                             (mk-proj-find-cmd-src-args mk-proj-src-patterns)
-                             " | etags -o " mk-proj-tags-file " - "))
-          (proc-name "etags-process"))
+      (let* ((tags-file-name (file-name-nondirectory mk-proj-tags-file))
+             ;; If the TAGS file is in the basedir, we can generate
+             ;; relative filenames which will allow the TAGS file to
+             ;; be relocatable if moved with the source. Otherwise,
+             ;; run the command from the TAGS file's directory and
+             ;; generate absolute filenames.
+             (relative-tags (string= (file-name-as-directory mk-proj-basedir)
+                                     (file-name-directory mk-proj-tags-file)))
+             (default-directory (file-name-directory mk-proj-tags-file))
+             (default-find-cmd (concat "find " (if relative-tags "." mk-proj-basedir)
+                                       " -type f "
+                                       (mk-proj-find-cmd-src-args mk-proj-src-patterns)))
+             (etags-cmd (concat (or (mk-proj-find-cmd-val 'src) default-find-cmd)
+                                " | etags -o '" tags-file-name "' - "))
+             (proc-name "etags-process"))
+        (message "project-tags default-dir %s" default-directory)
+        (message "project-tags cmd \"%s\"" etags-cmd)
         (message "Refreshing TAGS file %s..." mk-proj-tags-file)
         (start-process-shell-command proc-name "*etags*" etags-cmd)
         (set-process-sentinel (get-process proc-name) 'mk-proj-etags-cb))
