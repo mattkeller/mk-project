@@ -301,6 +301,11 @@ value is not used if a custom find command is set in
   :type 'string
   :group 'mk-project)
 
+(defcustom mk-proj-file-index-relative-paths t
+  "If non-nil, generate relative path names in the file-index buffer"
+  :type 'boolean
+  :group 'mk-project)
+
 ;; ---------------------------------------------------------------------
 ;; Utils
 ;; ---------------------------------------------------------------------
@@ -727,9 +732,11 @@ With C-u prefix, start ack from the current directory."
   (mk-proj-assert-proj)
   (when mk-proj-file-list-cache
     (mk-proj-fib-clear)
-    (let ((find-cmd (concat "find " mk-proj-basedir " -type f "
+    (let* ((default-directory (file-name-as-directory mk-proj-basedir))
+           (start-dir (if mk-proj-file-index-relative-paths "." mk-proj-basedir))
+           (find-cmd (concat "find " start-dir " -type f "
                             (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
-          (proc-name "index-process"))
+           (proc-name "index-process"))
       (when (mk-proj-get-vcs-path)
         (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
       (setq find-cmd (or (mk-proj-find-cmd-val 'index) find-cmd))
