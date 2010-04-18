@@ -303,6 +303,11 @@ value is not used if a custom find command is set in
   :type 'string
   :group 'mk-project)
 
+(defcustom mk-proj-file-index-relative-paths t
+  "If non-nil, generate relative path names in the file-index buffer"
+  :type 'boolean
+  :group 'mk-project)
+
 ;; ---------------------------------------------------------------------
 ;; Utils
 ;; ---------------------------------------------------------------------
@@ -413,14 +418,15 @@ value is not used if a custom find command is set in
       (when (and mk-proj-vcs (not (mk-proj-get-vcs-path)))
         (message "Invalid VCS setting!")
         (throw 'project-load t))
-      (message "Loading project %s" name)
+      (message "Loading project %s ..." name)
       (cd mk-proj-basedir)
       (mk-proj-tags-load)
       (mk-proj-fib-init)
       (mk-proj-visit-saved-open-files)
       (add-hook 'kill-emacs-hook 'mk-proj-kill-emacs-hook)
       (when mk-proj-startup-hook
-        (run-hooks 'mk-proj-startup-hook)))))
+        (run-hooks 'mk-proj-startup-hook))
+      (message "Loading project %s done" name))))
 
 (defun mk-proj-kill-emacs-hook ()
   "Ensure we save the open-files-cache info on emacs exit"
@@ -571,8 +577,8 @@ value is not used if a custom find command is set in
                                      (file-name-directory mk-proj-tags-file)))
              (default-directory (file-name-as-directory
                                  (file-name-directory mk-proj-tags-file)))
-             (default-find-cmd (concat "find " (if relative-tags "." mk-proj-basedir)
-                                       " -type f "
+             (default-find-cmd (concat "find '" (if relative-tags "." mk-proj-basedir)
+                                       "' -type f "
                                        (mk-proj-find-cmd-src-args mk-proj-src-patterns)))
              (etags-cmd (concat (or (mk-proj-find-cmd-val 'src) default-find-cmd)
                                 " | etags -o '" tags-file-name "' - "))
@@ -733,9 +739,11 @@ With C-u prefix, start ack from the current directory."
   (mk-proj-assert-proj)
   (when mk-proj-file-list-cache
     (mk-proj-fib-clear)
-    (let ((find-cmd (concat "find " mk-proj-basedir " -type f "
+    (let* ((default-directory (file-name-as-directory mk-proj-basedir))
+           (start-dir (if mk-proj-file-index-relative-paths "." mk-proj-basedir))
+           (find-cmd (concat "find '" start-dir "' -type f "
                             (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
-          (proc-name "index-process"))
+           (proc-name "index-process"))
       (when (mk-proj-get-vcs-path)
         (setq find-cmd (concat find-cmd " -not -path " (mk-proj-get-vcs-path))))
       (setq find-cmd (or (mk-proj-find-cmd-val 'index) find-cmd))
@@ -747,6 +755,28 @@ With C-u prefix, start ack from the current directory."
       (start-process-shell-command proc-name mk-proj-fib-name find-cmd)
       (set-process-sentinel (get-process proc-name) 'mk-proj-fib-cb))))
 
+(defun mk-proj-fib-matches (regex)
+  "Return list of files in *file-index* matching regex. 
+
+If regex is nil, return all files. Returned file paths are
+relative to the project's basedir."
+  (let ((files '()))
+    (with-current-buffer mk-proj-fib-name
+      (goto-char (point-min))
+      (while 
+          (progn
+            (let ((raw-file (buffer-substring (line-beginning-position) (line-end-position))))
+              (when (> (length raw-file) 0)
+                ;; file names in buffer can be absolute or relative to basedir
+                (let ((file (if (file-name-absolute-p raw-file) 
+                                (file-relative-name raw-file mk-proj-basedir)
+                              raw-file)))
+                  (if regex
+                      (when (string-match regex file) (add-to-list 'files file))
+                    (add-to-list 'files file)))
+                (= (forward-line) 0))))) ; loop test
+      files)))
+
 (defun* project-find-file (regex)
   "Find file in the current project matching the given regex.
 
@@ -757,32 +787,23 @@ completion. See also: `project-index', `project-find-file-ido'."
   (interactive "sFind file in project matching: ")
   (mk-proj-assert-proj)
   (unless (get-buffer mk-proj-fib-name)
-    (when (yes-or-no-p "No file index exists for this project. Generate one? ")
-      (project-index))
-    (message "Cancelling project-find-file")
+    (message "Please use project-index to create the index before running project-find-file")
     (return-from "project-find-file" nil))
-  (with-current-buffer mk-proj-fib-name
-    (let ((matches nil))
-      (goto-char (point-min))
-      (dotimes (i (count-lines (point-min) (point-max)))
-        (let ((bufline (buffer-substring (line-beginning-position) (line-end-position))))
-          (when (string-match regex bufline)
-            (push bufline matches))
-          (forward-line)))
-      (let ((match-cnt (length matches)))
-        (cond
-         ((= 0 match-cnt)
-          (message "No matches for \"%s\" in this project" regex))
-         ((= 1 match-cnt )
-          (find-file (car matches)))
-         (t
-          (let ((file (if (mk-proj-use-ido)
-                          (ido-completing-read "Multiple matches, pick one (ido): " matches)
-                        (completing-read "Multiple matches, pick one: " matches))))
-            (when file
-              (find-file file)))))))))
+    (let* ((matches (mk-proj-fib-matches regex))
+           (match-cnt (length matches)))
+      (cond
+       ((= 0 match-cnt)
+        (message "No matches for \"%s\" in this project" regex))
+       ((= 1 match-cnt )
+        (find-file (car matches)))
+       (t
+        (let ((file (if (mk-proj-use-ido)
+                        (ido-completing-read "Multiple matches, pick one (ido): " matches)
+                      (completing-read "Multiple matches, pick one: " matches))))
+          (when file
+            (find-file (concat (file-name-as-directory mk-proj-basedir) file))))))))
 
-(defun project-find-file-ido ()
+(defun* project-find-file-ido ()
   "Find file in the current project using 'ido'.
 
 Choose a file to open from among the files listed in buffer
@@ -790,18 +811,14 @@ Choose a file to open from among the files listed in buffer
 selection of the file. See also: `project-index',
 `project-find-file'."
   (interactive)
-  (flet ((buffer-lines-to-list (b)
-            (let ((file-lines '()))
-              (with-current-buffer b
-                (goto-char (point-min))
-                (dotimes (i (count-lines (point-min) (point-max)))
-                  (add-to-list 'file-lines (buffer-substring (line-beginning-position) (line-end-position)))
-                  (forward-line)))
-              file-lines)))
-    (let ((file (ido-completing-read "Find file in project matching (ido): "
-                                     (buffer-lines-to-list mk-proj-fib-name))))
-      (when file
-        (find-file file)))))
+  (mk-proj-assert-proj)
+  (unless (get-buffer mk-proj-fib-name)
+    (message "Please use project-index to create the index before running project-find-file-ido")
+    (return-from "project-find-file-ido" nil))
+  (let ((file (ido-completing-read "Find file in project matching (ido): "
+                                   (mk-proj-fib-matches nil))))
+    (when file
+      (find-file (concat (file-name-as-directory mk-proj-basedir) file)))))
 
 (defun project-multi-occur (regex)
   "Search all open project files for 'regex' using `multi-occur'"
