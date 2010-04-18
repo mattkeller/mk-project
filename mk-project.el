@@ -749,7 +749,6 @@ With C-u prefix, start ack from the current directory."
       (start-process-shell-command proc-name mk-proj-fib-name find-cmd)
       (set-process-sentinel (get-process proc-name) 'mk-proj-fib-cb))))
 
-;; TODO: needs testing on windows
 (defun mk-proj-fib-matches (regex)
   "Return list of files in *file-index* matching regex. 
 
@@ -769,7 +768,7 @@ relative to the project's basedir."
                   (if regex
                       (when (string-match regex file) (add-to-list 'files file))
                     (add-to-list 'files file)))
-                (= (forward-line) 0))))) ;; loop test
+                (= (forward-line) 0))))) ; loop test
       files)))
 
 (defun* project-find-file (regex)
