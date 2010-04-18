@@ -44,6 +44,7 @@
 ;; project-compile        - run the compile command
 ;; project-grep           - run find-grep from the project's basedir
 ;; project-ack            - run ack from the project's basedir
+;; project-multi-occur    - search open project files using multi-occur
 ;; project-find-file      - quickly open a file in basedir by regex
 ;; project-find-file-ido  - quickly open a file in basedir using 'ido'
 ;; project-index          - re-index the project files
@@ -74,6 +75,7 @@
 ;; (global-set-key (kbd "C-c p c") 'project-compile)
 ;; (global-set-key (kbd "C-c p g") 'project-grep)
 ;; (global-set-key (kbd "C-c p a") 'project-ack)
+;; (global-set-key (kbd "C-c p o") 'project-multi-occur)
 ;; (global-set-key (kbd "C-c p l") 'project-load)
 ;; (global-set-key (kbd "C-c p u") 'project-unload)
 ;; (global-set-key (kbd "C-c p f") 'project-find-file) ; or project-find-file-ido
@@ -344,6 +346,10 @@ value is not used if a custom find command is set in
               ((functionp cmd) (funcall cmd context))
               (t (error "find-cmd is neither a string or a function")))
       nil)))
+
+(defun mk-proj-filter (condp lst)
+  (delq nil
+        (mapcar (lambda (x) (and (funcall condp x) x)) lst)))
 
 ;; ---------------------------------------------------------------------
 ;; Project Configuration
@@ -796,6 +802,13 @@ selection of the file. See also: `project-index',
                                      (buffer-lines-to-list mk-proj-fib-name))))
       (when file
         (find-file file)))))
+
+(defun project-multi-occur (regex)
+  "Search all open project files for 'regex' using `multi-occur'"
+  (interactive "sRegex: ")
+  (multi-occur (mk-proj-filter (lambda (b) (if (buffer-file-name b) b nil)) 
+                               (mk-proj-buffers))
+               regex))
 
 (provide 'mk-project)
 
