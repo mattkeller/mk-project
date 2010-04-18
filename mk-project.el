@@ -412,14 +412,15 @@ value is not used if a custom find command is set in
       (when (and mk-proj-vcs (not (mk-proj-get-vcs-path)))
         (message "Invalid VCS setting!")
         (throw 'project-load t))
-      (message "Loading project %s" name)
+      (message "Loading project %s ..." name)
       (cd mk-proj-basedir)
       (mk-proj-tags-load)
       (mk-proj-fib-init)
       (mk-proj-visit-saved-open-files)
       (add-hook 'kill-emacs-hook 'mk-proj-kill-emacs-hook)
       (when mk-proj-startup-hook
-        (run-hooks 'mk-proj-startup-hook)))))
+        (run-hooks 'mk-proj-startup-hook))
+      (message "Loading project %s done" name))))
 
 (defun mk-proj-kill-emacs-hook ()
   "Ensure we save the open-files-cache info on emacs exit"
