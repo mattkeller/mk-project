@@ -571,8 +571,8 @@ value is not used if a custom find command is set in
                                      (file-name-directory mk-proj-tags-file)))
              (default-directory (file-name-as-directory
                                  (file-name-directory mk-proj-tags-file)))
-             (default-find-cmd (concat "find " (if relative-tags "." mk-proj-basedir)
-                                       " -type f "
+             (default-find-cmd (concat "find '" (if relative-tags "." mk-proj-basedir)
+                                       "' -type f "
                                        (mk-proj-find-cmd-src-args mk-proj-src-patterns)))
              (etags-cmd (concat (or (mk-proj-find-cmd-val 'src) default-find-cmd)
                                 " | etags -o '" tags-file-name "' - "))
@@ -735,7 +735,7 @@ With C-u prefix, start ack from the current directory."
     (mk-proj-fib-clear)
     (let* ((default-directory (file-name-as-directory mk-proj-basedir))
            (start-dir (if mk-proj-file-index-relative-paths "." mk-proj-basedir))
-           (find-cmd (concat "find " start-dir " -type f "
+           (find-cmd (concat "find '" start-dir "' -type f "
                             (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
            (proc-name "index-process"))
       (when (mk-proj-get-vcs-path)
