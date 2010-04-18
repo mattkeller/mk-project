@@ -109,13 +109,6 @@ Once a project is configured via `project-def` and loaded via `project-load`, th
   <td>C-c p s</td>
   <td>Print values of project variables</td>
 </tr>
-<!--
-<tr>
-  <td>project-<b>home</b></td>
-  <td>C-c p h</td>
-  <td>cd to the project's basedir</td>
-</tr>
--->
 </table>
 
 mk-project.el relies heavily on the find and grep commands in your environment. Unix and Linux systems certainly have find and grep. Cygwin can provide these commands for Windows.
@@ -338,5 +331,12 @@ Found a bug or have a feature request?
 --------------------------------------
 
 Feel free to contact me at mk -at- littleredbat -dot- net.
+
+
+How is it licensed?
+-------------------
+
+mk-project is licensed under the [GPLv2](http://www.gnu.org/licenses/gpl-2.0.html).
+
 
 
