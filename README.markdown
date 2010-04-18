@@ -318,6 +318,7 @@ The following key bindings are useful:
 What's going on with it?
 ------------------------
 
+* 2010/04/18: Released version 1.4.0 with [several enhancements](http://www.littleredbat.net/mk/blog/story/84/).
 * 2010/02/09: Released version 1.3.1 with a [default-directory bug fix](http://www.littleredbat.net/mk/blog/story/83).
 * 2010/01/30: Released version 1.3 with [custom find command](http://www.littleredbat.net/mk/blog/story/82) support.
 * 2009/12/16: Released version 1.2.1 with a [bug fix](http://www.littleredbat.net/mk/blog/story/81/).
