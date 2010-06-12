@@ -28,7 +28,7 @@
 
 ;; More information about this library, including the most recent
 ;; version and a comprehensive README, is available at
-;; http://http://github.com/mattkeller/mk-project
+;; http://github.com/mattkeller/mk-project
 
 ;;; Code:
 
