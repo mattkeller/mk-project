@@ -160,7 +160,8 @@ used by `project-find-file' to quickly locate project files.")
                              (cvs . "'*/.CVS/*'")
                              (svn . "'*/.svn/*'")
                              (bzr . "'*/.bzr/*'")
-                             (hg  . "'*/.hg/*'"))
+                             (hg  . "'*/.hg/*'")
+                             (darcs . "'*/_darcs/*'"))
   "When `mk-proj-vcs' is one of the VCS types listed here, ignore
 the associated paths when greping or indexing the project. This
 value is not used if a custom find command is set in
