@@ -587,27 +587,20 @@ With C-u prefix, start ack from the current directory."
 ;; Compile
 ;; ---------------------------------------------------------------------
 
-(defun project-compile-default (opts)
-  "Please don't use this manually, it is supposed to be called by
-`project-compile'."
-  (interactive "sCompile options: ")
-  (mk-proj-assert-proj)
-  (project-home)
-  (compile (concat mk-proj-compile-cmd " " opts)))
-
 (defun project-compile (&optional opts)
-  "Run the compile command for this project."
-  (interactive)
-  (mk-proj-assert-proj)
-  (project-home)
-  (if (stringp mk-proj-compile-cmd)
-      (if opts
-          (funcall 'project-compile-default opts)
-        (call-interactively 'project-compile-default))
-    (if (fboundp mk-proj-compile-cmd)
-        (if (commandp mk-proj-compile-cmd)
-            (call-interactively mk-proj-compile-cmd)
-          (funcall mk-proj-compile-cmd)))))
+ "Run the compile command for this project."
+ (interactive)
+ (mk-proj-assert-proj)
+ (let ((default-directory mk-proj-basedir))
+   (cond ((stringp mk-proj-compile-cmd)
+          (when (and (null opts) (called-interactively-p))
+            (setq opts (read-string "Compile options: ")))
+          (compile (concat mk-proj-compile-cmd " " opts)))
+         ((fboundp mk-proj-compile-cmd)
+          (if (commandp mk-proj-compile-cmd)
+              (call-interactively mk-proj-compile-cmd)
+            (funcall mk-proj-compile-cmd opts)))
+         (t (message "No compile command defined.")))))
 
 ;; ---------------------------------------------------------------------
 ;; Home and Dired
