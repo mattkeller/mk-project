@@ -300,14 +300,16 @@ value is not used if a custom find command is set in
     (maybe-set-var 'file-list-cache #'expand-file-name)
     (maybe-set-var 'open-files-cache #'expand-file-name)))
 
-(defun project-load ()
+(defun project-load (&optional name)
   "Load a project's settings."
   (interactive)
   (catch 'project-load
     (let ((oldname mk-proj-name)
-          (name (if (mk-proj-use-ido)
-                    (ido-completing-read "Project Name (ido): " (mk-proj-names))
-                  (completing-read "Project Name: " (mk-proj-names)))))
+          (name (or name
+                    (if (mk-proj-use-ido)
+                        (ido-completing-read "Project Name (ido): "
+                                             (mk-proj-names))
+                      (completing-read "Project Name: " (mk-proj-names))))))
       (unless (string= oldname name)
         (project-unload))
       (let ((proj-config (mk-proj-find-config name)))
