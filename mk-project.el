@@ -203,7 +203,7 @@ value is not used if a custom find command is set in
   :type 'boolean
   :group 'mk-project)
 
-(defcustom mk-proj-ack-cmd (if (string-equal system-type "windows-nt") "ack.pl" "ack")
+(defcustom mk-proj-ack-cmd (if (eq system-type 'windows-nt) "ack.pl" "ack")
   "Name of the ack program to run. Defaults to \"ack\" (or \"ack.pl\" on Windows)."
   :type 'string
   :group 'mk-project)
@@ -525,18 +525,23 @@ load time. See also `project-menu-remove'."
 ;; Grep
 ;; ---------------------------------------------------------------------
 
-(defun project-grep ()
-  "Run find-grep on the project's basedir, excluding files in mk-proj-ignore-patterns, tag files, etc.
-With C-u prefix, start from the current directory."
+(defun project-grep (&optional phrase from-current-dir)
+  "Run find-grep on the project's basedir, excluding files in 
+mk-proj-ignore-patterns, tag files, etc.
+
+If the phrase argument is not included, it will prompt for a
+search phrase.  If the from-current-dir argument is true, or with
+C-u prefix, start from the current directory."
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
-         (regex (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
-                  (read-string "Grep project for: ")))
+         (regex (or phrase
+                    (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
+                      (read-string "Grep project for: "))))
          (find-cmd "find . -type f")
          (grep-cmd (concat "grep -i -n \"" regex "\""))
          (default-directory (file-name-as-directory
-                             (if (mk-proj-has-univ-arg)
+                             (if (or from-current-dir (mk-proj-has-univ-arg))
                                  default-directory
                                mk-proj-basedir))))
     (when mk-proj-ignore-patterns
@@ -568,18 +573,19 @@ With C-u prefix, start from the current directory."
           mk-proj-ack-args " "
           regex))
 
-(defun project-ack ()
+(defun project-ack (&optional phrase from-current-dir)
   "Run ack from project's basedir, using the `ack-args' configuration.
 With C-u prefix, start ack from the current directory."
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
-         (regex (if wap (read-string (concat "Ack project for (default \"" wap "\"): ") nil nil wap)
-                  (read-string "Ack project for: ")))
+         (regex (or phrase
+                    (if wap (read-string (concat "Ack project for (default \"" wap "\"): ") nil nil wap)
+                  (read-string "Ack project for: "))))
          (whole-cmd (mk-proj-ack-cmd regex))
          (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd))
          (default-directory (file-name-as-directory
-                             (if (mk-proj-has-univ-arg)
+                             (if (or from-current-dir (mk-proj-has-univ-arg))
                                  default-directory
                                mk-proj-basedir))))
     (compilation-start confirmed-cmd 'ack-mode)))
