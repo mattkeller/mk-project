@@ -85,7 +85,8 @@ is set -- or in grepping when `mk-proj-grep-find-cmd' is set.")
 not one relative to basedir. Value is expanded with expand-file-name.")
 
 (defvar mk-proj-compile-cmd nil
-  "Shell command to build the entire project. Optional. Example: make -k.")
+  "Command to build the entire project. Can be either a string specifying 
+a shell command or the name of a function. Optional. Example: make -k.")
 
 (defvar mk-proj-startup-hook nil
   "Hook function to run after the project is loaded. Optional. Project
@@ -587,12 +588,22 @@ With C-u prefix, start ack from the current directory."
 ;; Compile
 ;; ---------------------------------------------------------------------
 
-(defun project-compile (opts)
-  "Run the compile command for this project."
-  (interactive "sCompile options: ")
-  (mk-proj-assert-proj)
-  (project-home)
-  (compile (concat mk-proj-compile-cmd " " opts)))
+(defun project-compile (&optional opts)
+ "Run the compile command (string or function) for this project."
+ (interactive)
+ (mk-proj-assert-proj)
+ (let ((default-directory mk-proj-basedir))
+   (cond ((stringp mk-proj-compile-cmd)
+          (when (and (null opts) (called-interactively-p))
+            (setq opts (read-string "Compile options: ")))
+          (compile (concat mk-proj-compile-cmd " " opts)))
+         ((fboundp mk-proj-compile-cmd)
+          (cond ((commandp mk-proj-compile-cmd)
+                 (call-interactively mk-proj-compile-cmd))
+                (opts
+                 (funcall mk-proj-compile-cmd opts))
+                (t (funcall mk-proj-compile-cmd))))
+         (t (message "No compile command defined.")))))
 
 ;; ---------------------------------------------------------------------
 ;; Home and Dired
