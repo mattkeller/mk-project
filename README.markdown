@@ -109,6 +109,16 @@ Once a project is configured via `project-def` and loaded via `project-load`, th
   <td>C-c p s</td>
   <td>Print values of project variables</td>
 </tr>
+<tr>
+  <td>project-<b>menu</b></td>
+  <td></td>
+  <td>Enable the 'mk-project' menu.</td>
+</tr>
+<tr>
+  <td>project-<b>menu-remove</b></td>
+  <td></td>
+  <td>Disable the 'mk-project' menu.</td>
+</tr>
 </table>
 
 mk-project.el relies heavily on the find and grep commands in your environment. Unix and Linux systems certainly have find and grep. Cygwin can provide these commands for Windows.

@@ -212,6 +212,12 @@ value is not used if a custom find command is set in
   :type 'boolean
   :group 'mk-project)
 
+(defcustom mk-proj-menu-on t
+  "If non-nil, define the 'mk-project' menu in the menu-bar at
+load time. See also `project-menu-remove'."
+  :type 'boolean
+  :group 'mk-project)
+
 ;; ---------------------------------------------------------------------
 ;; Utils
 ;; ---------------------------------------------------------------------
@@ -735,6 +741,53 @@ selection of the file. See also: `project-index',
   (multi-occur (mk-proj-filter (lambda (b) (if (buffer-file-name b) b nil)) 
                                (mk-proj-buffers))
                regex))
+
+;; ---------------------------------------------------------------------
+;; Menus
+;; ---------------------------------------------------------------------
+
+(defun mk-proj-menu-item (key label fn &optional always-enabled-p)
+  "Define a mk-project menu item that may not be enabled if the a
+project is not loaded."
+  (let ((whole-key `[menu-bar mkproject ,key]))
+    (define-key global-map whole-key
+      `(menu-item ,label ,fn :enable ,(if always-enabled-p 't 'mk-proj-name)))))
+
+(defun mk-proj-menu-item-separator (key)
+  "Define a separator line in the mk-project menu."
+  (define-key global-map `[menu-bar mkproject ,key] '(menu-item "--")))
+
+(defun project-menu ()
+  "Define a menu for mk-project operations."
+  (interactive)
+  ;; define a menu in the top-level menu
+  (define-key-after
+    global-map
+    [menu-bar mkproject]
+    (cons "mk-project" (make-sparse-keymap))
+    'tools)
+
+  ;; define the menu items in reverse order
+  (mk-proj-menu-item 'tags   "Build TAGS"     'project-tags)
+  (mk-proj-menu-item 'index  "Build Index"    'project-index)
+  (mk-proj-menu-item-separator 's2)
+  (mk-proj-menu-item 'dired  "Browse (dired)" 'project-dired)
+  (mk-proj-menu-item 'comp   "Compile   "     'project-compile)
+  (mk-proj-menu-item 'occur  "Multi-occur"    'project-multi-occur)
+  (mk-proj-menu-item 'ack    "Ack"            'project-ack)
+  (mk-proj-menu-item 'grep   "Grep"           'project-grep)
+  (mk-proj-menu-item-separator 's1)
+  (mk-proj-menu-item 'status "Status"         'project-status)
+  (mk-proj-menu-item 'unload "Unload Project" 'project-unload)
+  (mk-proj-menu-item 'load   "Load Project"   'project-load t))
+
+(defun project-menu-remove ()
+  "Remove the mk-project menu from the menu bar"
+  (interactive)
+  (global-unset-key [menu-bar mkproject]))
+
+(when mk-proj-menu-on 
+  (project-menu))
 
 (provide 'mk-project)
 
