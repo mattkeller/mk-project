@@ -211,6 +211,12 @@ value is not used if a custom find command is set in
   :type 'boolean
   :group 'mk-project)
 
+(defcustom mk-proj-menu-on t
+  "If non-nil, define the 'mk-project' menu in the menu-bar at
+load time. See also `project-menu-remove'."
+  :type 'boolean
+  :group 'mk-project)
+
 ;; ---------------------------------------------------------------------
 ;; Utils
 ;; ---------------------------------------------------------------------
@@ -773,6 +779,9 @@ project is not loaded."
   "Remove the mk-project menu from the menu bar"
   (interactive)
   (global-unset-key [menu-bar mkproject]))
+
+(when mk-proj-menu-on 
+  (project-menu))
 
 (provide 'mk-project)
 
