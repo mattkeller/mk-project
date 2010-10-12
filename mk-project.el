@@ -671,26 +671,40 @@ With C-u prefix, start ack from the current directory."
       (set-process-sentinel (get-process proc-name) 'mk-proj-fib-cb))))
 
 (defun mk-proj-fib-matches (regex)
-  "Return list of files in *file-index* matching regex. 
+  "Return list of files in *file-index* matching regex.
 
 If regex is nil, return all files. Returned file paths are
 relative to the project's basedir."
   (let ((files '()))
     (with-current-buffer mk-proj-fib-name
       (goto-char (point-min))
-      (while 
-          (progn
-            (let ((raw-file (buffer-substring (line-beginning-position) (line-end-position))))
-              (when (> (length raw-file) 0)
-                ;; file names in buffer can be absolute or relative to basedir
-                (let ((file (if (file-name-absolute-p raw-file) 
-                                (file-relative-name raw-file mk-proj-basedir)
-                              raw-file)))
-                  (if regex
-                      (when (string-match regex file) (add-to-list 'files file))
-                    (add-to-list 'files file)))
-                (= (forward-line) 0))))) ; loop test
-      files)))
+      (while
+        (progn
+          (let ((raw-file (mk-proj-normalize-drive-letter
+                            (buffer-substring
+                              (line-beginning-position) (line-end-position)))))
+            (when (> (length raw-file) 0)
+              ;; file names in buffer can be absolute or relative to basedir
+              (let ((file (if (file-name-absolute-p raw-file)
+                              (file-relative-name raw-file mk-proj-basedir)
+                            raw-file)))
+                (if regex
+                    (when (string-match regex file) (add-to-list 'files file))
+                  (add-to-list 'files file)))
+              (= (forward-line) 0))))) ; loop test
+      (sort files #'string-lessp))))
+
+(defun mk-proj-normalize-drive-letter (file)
+  "Convert drive letters to lowercase to be compatible with
+file-relative-name, file-name-as-directory"
+  (if (or (null file) (< (length file) 2))
+      file
+    (let ((c1 (aref file 0))
+          (c2 (aref file 1)))
+      (if (and (= (aref ":" 0) c2)
+               (and (>= c1 (aref "A" 0)) (<= c1 (aref "Z" 0))))
+          (concat (char-to-string (+ c1 32)) (substring file 1))
+        file))))
 
 (defun* project-find-file (regex)
   "Find file in the current project matching the given regex.
