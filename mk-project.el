@@ -606,14 +606,8 @@ With C-u prefix, start ack from the current directory."
          (t (message "No compile command defined.")))))
 
 ;; ---------------------------------------------------------------------
-;; Home and Dired
+;; Dired
 ;; ---------------------------------------------------------------------
-
-(defun project-home ()
-  "cd to the basedir of the current project"
-  (interactive)
-  (mk-proj-assert-proj)
-  (cd mk-proj-basedir))
 
 (defun project-dired ()
   "Open dired in the project's basedir (or jump to the existing dired buffer)"
