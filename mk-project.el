@@ -392,14 +392,17 @@ value is not used if a custom find command is set in
     buffers))
 
 (defun project-status ()
-  "View project's variables."
-  (interactive)
-  (if mk-proj-basedir
-      (let ((msg))
-        (dolist (v mk-proj-proj-vars)
-          (setq msg (concat msg (format "%-24s = %s\n" v (symbol-value v)))))
-        (message msg))
-    (message "No project loaded.")))
+ "View project's variables."
+ (interactive)
+ (if mk-proj-basedir
+   (let ((b (get-buffer-create "*project-status*")))
+     (with-current-buffer b
+       (kill-region (point-min) (point-max))
+       (dolist (v mk-proj-proj-vars)
+         (insert (format "%-24s = %s\n" v (symbol-value v)))))
+     (when (not (eq b (current-buffer)))
+       (switch-to-buffer-other-window b)))
+   (message "No project loaded.")))
 
 ;; ---------------------------------------------------------------------
 ;; Save/Restore open files
