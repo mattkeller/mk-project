@@ -772,7 +772,7 @@ selection of the file. See also: `project-index',
 ;; ---------------------------------------------------------------------
 
 (defun mk-proj-menu-item (key label fn &optional always-enabled-p)
-  "Define a mk-project menu item that may not be enabled if the a
+  "Define a mk-project menu item that may not be enabled if a
 project is not loaded."
   (let ((whole-key `[menu-bar mkproject ,key]))
     (define-key global-map whole-key
