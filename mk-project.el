@@ -300,23 +300,29 @@ value is not used if a custom find command is set in
     (maybe-set-var 'file-list-cache #'expand-file-name)
     (maybe-set-var 'open-files-cache #'expand-file-name)))
 
-(defun mk-proj-load (name)
+(defun project-load (&optional name)
+  "Load a project's settings."
   (interactive)
-  (catch 'mk-proj-load
-    (let ((oldname mk-proj-name))
+  (catch 'project-load
+    (let ((oldname mk-proj-name)
+          (name (or name
+                    (if (mk-proj-use-ido)
+                        (ido-completing-read "Project Name (ido): "
+                                             (mk-proj-names))
+                      (completing-read "Project Name: " (mk-proj-names))))))
       (unless (string= oldname name)
         (project-unload))
       (let ((proj-config (mk-proj-find-config name)))
         (if proj-config
             (mk-proj-load-vars name proj-config)
           (message "Project %s does not exist!" name)
-          (throw 'mk-proj-load t)))
+          (throw 'project-load t)))
       (when (not (file-directory-p mk-proj-basedir))
         (message "Base directory %s does not exist!" mk-proj-basedir)
-        (throw 'mk-proj-load t))
+        (throw 'project-load t))
       (when (and mk-proj-vcs (not (mk-proj-get-vcs-path)))
         (message "Invalid VCS setting!")
-        (throw 'mk-proj-load t))
+        (throw 'project-load t))
       (message "Loading project %s ..." name)
       (cd mk-proj-basedir)
       (mk-proj-tags-load)
@@ -326,15 +332,6 @@ value is not used if a custom find command is set in
       (when mk-proj-startup-hook
         (run-hooks 'mk-proj-startup-hook))
       (message "Loading project %s done" name))))
-  
-
-(defun project-load ()
-  "Load a project's settings."
-  (interactive)
-  (let ((name (if (mk-proj-use-ido)
-                  (ido-completing-read "Project Name (ido): " (mk-proj-names))
-                (completing-read "Project Name: " (mk-proj-names)))))
-    (mk-proj-load name)))
 
 (defun mk-proj-kill-emacs-hook ()
   "Ensure we save the open-files-cache info on emacs exit"
