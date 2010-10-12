@@ -165,7 +165,7 @@ The following table describes the configuration directives that are used in `pro
 <tr>
   <td>compile-cmd</td>
   <td>Optional</td>
-  <td>Shell command to build the project. Example: "make -k"</td>
+  <td>Command to build the project. Can be either a string specifying a shell command or the name of a function to call. Example: "make -k"</td>
 </tr>
 <tr>
   <td>startup-hook</td>
