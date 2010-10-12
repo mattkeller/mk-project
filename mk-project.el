@@ -203,7 +203,7 @@ value is not used if a custom find command is set in
   :type 'boolean
   :group 'mk-project)
 
-(defcustom mk-proj-ack-cmd (if (string-equal system-type "windows-nt") "ack.pl" "ack")
+(defcustom mk-proj-ack-cmd (if (eq system-type 'windows-nt) "ack.pl" "ack")
   "Name of the ack program to run. Defaults to \"ack\" (or \"ack.pl\" on Windows)."
   :type 'string
   :group 'mk-project)
@@ -573,18 +573,19 @@ C-u prefix, start from the current directory."
           mk-proj-ack-args " "
           regex))
 
-(defun project-ack ()
+(defun project-ack (&optional phrase from-current-dir)
   "Run ack from project's basedir, using the `ack-args' configuration.
 With C-u prefix, start ack from the current directory."
   (interactive)
   (mk-proj-assert-proj)
   (let* ((wap (word-at-point))
-         (regex (if wap (read-string (concat "Ack project for (default \"" wap "\"): ") nil nil wap)
-                  (read-string "Ack project for: ")))
+         (regex (or phrase
+                    (if wap (read-string (concat "Ack project for (default \"" wap "\"): ") nil nil wap)
+                  (read-string "Ack project for: "))))
          (whole-cmd (mk-proj-ack-cmd regex))
          (confirmed-cmd (read-string "Ack command: " whole-cmd nil whole-cmd))
          (default-directory (file-name-as-directory
-                             (if (mk-proj-has-univ-arg)
+                             (if (or from-current-dir (mk-proj-has-univ-arg))
                                  default-directory
                                mk-proj-basedir))))
     (compilation-start confirmed-cmd 'ack-mode)))
