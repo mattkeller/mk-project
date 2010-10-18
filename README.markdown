@@ -109,6 +109,16 @@ Once a project is configured via `project-def` and loaded via `project-load`, th
   <td>C-c p s</td>
   <td>Print values of project variables</td>
 </tr>
+<tr>
+  <td>project-<b>menu</b></td>
+  <td></td>
+  <td>Enable the 'mk-project' menu.</td>
+</tr>
+<tr>
+  <td>project-<b>menu-remove</b></td>
+  <td></td>
+  <td>Disable the 'mk-project' menu.</td>
+</tr>
 </table>
 
 mk-project.el relies heavily on the find and grep commands in your environment. Unix and Linux systems certainly have find and grep. Cygwin can provide these commands for Windows.
@@ -155,7 +165,7 @@ The following table describes the configuration directives that are used in `pro
 <tr>
   <td>compile-cmd</td>
   <td>Optional</td>
-  <td>Shell command to build the project. Example: "make -k"</td>
+  <td>Command to build the project. Can be either a string specifying a shell command or the name of a function to call. Example: "make -k"</td>
 </tr>
 <tr>
   <td>startup-hook</td>
