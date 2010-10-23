@@ -36,7 +36,7 @@
 (require 'thingatpt)
 (require 'cl)
 
-(defvar mk-proj-version "1.5.0"
+(defvar mk-proj-version "1.5.1"
   "As tagged at http://github.com/mattkeller/mk-project/tree/master")
 
 ;; ---------------------------------------------------------------------

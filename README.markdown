@@ -154,7 +154,7 @@ The following table describes the configuration directives that are used in `pro
 <tr>
   <td>vcs</td>
   <td>Optional</td>
-  <td>When set to one of 'git, 'cvs, 'svn, 'bzr, or 'hg, the grep and index commands will ignore the VCS's private files 
+  <td>When set to one of 'git, 'cvs, 'svn, 'bzr, 'hg, or 'darcs the grep and index commands will ignore the VCS's private files 
   (for example, the .git directory or the .CVS directories).</td>
 </tr>
 <tr>
@@ -292,9 +292,7 @@ Where can I get it?
 
 Releases of mk-project are uploaded to the [Emacs Wiki](http://www.emacswiki.org/cgi-bin/wiki/mk-project.el).
 
-You can track recent versions (&gt; 1.0.3) of the code at github: http://github.com/mattkeller/mk-project.
-
-Older versions (&lt; 1.0.3) are can be found in [my .emacs git repo](http://www.littleredbat.net/mk/cgi-bin/gitweb/gitweb.cgi?p=elisp.git;a=history;f=mk-project.el).
+You can track the code at github: http://github.com/mattkeller/mk-project.
 
 
 How do I install it?
@@ -321,6 +319,7 @@ The following key bindings are useful:
 What's going on with it?
 ------------------------
 
+* 2010/10/23: Released version 1.5.1 with [some new features](http://www.littleredbat.net/mk/blog/story/86).
 * 2010/04/18: Released version 1.4.0 with [several enhancements](http://www.littleredbat.net/mk/blog/story/84/).
 * 2010/02/09: Released version 1.3.1 with a [default-directory bug fix](http://www.littleredbat.net/mk/blog/story/83).
 * 2010/01/30: Released version 1.3 with [custom find command](http://www.littleredbat.net/mk/blog/story/82) support.
@@ -340,7 +339,7 @@ There are several Emacs libraries that do similar things ([ProjMan](http://www.e
 Found a bug or have a feature request?
 --------------------------------------
 
-Feel free to contact me at mk -at- littleredbat -dot- net.
+Feel free to contact Matt at mk -at- littleredbat -dot- net or [submit an issue online](http://github.com/mattkeller/mk-project/issues).
 
 
 How is it licensed?
@@ -349,4 +348,14 @@ How is it licensed?
 mk-project is licensed under the [GPLv2](http://www.gnu.org/licenses/gpl-2.0.html).
 
 
+Who wrote it?
+-------------
+
+[Matt Keller](http://www.littleredbat.net/mk) is the primary author.
+
+[Andreas Raster](http://github.com/rakete) contributed code and ideas to the 1.5 release. Andreas also maintains a ['anything' integration module](http://github.com/rakete/mk-project/blob/master/mk-project-anything.el).
+
+Various others have contributed bug reports and ideas. 
+
+Thanks to all for their code and ideas!
 
