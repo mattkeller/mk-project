@@ -493,7 +493,7 @@ load time. See also `project-menu-remove'."
                                      (file-name-directory mk-proj-tags-file)))
              (default-directory (file-name-as-directory
                                  (file-name-directory mk-proj-tags-file)))
-             (default-find-cmd (concat "find '" (if relative-tags "." mk-proj-basedir)
+             (default-find-cmd (concat find-program " '" (if relative-tags "." mk-proj-basedir)
                                        "' -type f "
                                        (mk-proj-find-cmd-src-args mk-proj-src-patterns)))
              (etags-cmd (concat (or (mk-proj-find-cmd-val 'src) default-find-cmd)
@@ -538,7 +538,7 @@ C-u prefix, start from the current directory."
          (regex (or phrase
                     (if wap (read-string (concat "Grep project for (default \"" wap "\"): ") nil nil wap)
                       (read-string "Grep project for: "))))
-         (find-cmd "find . -type f")
+         (find-cmd (concat find-program " . -type f"))
          (grep-cmd (concat "grep -i -n \"" regex "\""))
          (default-directory (file-name-as-directory
                              (if (or from-current-dir (mk-proj-has-univ-arg))
@@ -667,7 +667,7 @@ With C-u prefix, start ack from the current directory."
     (mk-proj-fib-clear)
     (let* ((default-directory (file-name-as-directory mk-proj-basedir))
            (start-dir (if mk-proj-file-index-relative-paths "." mk-proj-basedir))
-           (find-cmd (concat "find '" start-dir "' -type f "
+           (find-cmd (concat find-program " '" start-dir "' -type f "
                             (mk-proj-find-cmd-ignore-args mk-proj-ignore-patterns)))
            (proc-name "index-process"))
       (when (mk-proj-get-vcs-path)
